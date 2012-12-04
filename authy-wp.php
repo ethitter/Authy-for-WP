@@ -4,7 +4,7 @@
  * Plugin URI: http://www.ethitter.com/plugins/authy-for-wordpress/
  * Description: Add <a href="http://www.authy.com/">Authy</a> two-factor authentication to WordPress. Users opt in for an added level of security that relies on random codes from their mobile devices.
  * Author: Erick Hitter
- * Version: 0.1
+ * Version: 0.2
  * Author URI: http://www.ethitter.com/
  * License: GPL2+
  * Text Domain: authy_for_wp
@@ -124,6 +124,8 @@ class Authy_WP {
 			// Authentication
 			add_action( 'login_form', array( $this, 'action_login_form' ), 50 );
 			add_filter( 'authenticate', array( $this, 'action_authenticate' ), 9999, 2 );
+		} else {
+			add_action( 'admin_notices', array( $this, 'action_admin_notices' ) );
 		}
 	}
 
@@ -247,6 +249,26 @@ class Authy_WP {
 			$links['settings'] = '<a href="' . menu_page_url( $this->settings_page, false ) . '">' . __( 'Settings', 'authy_for_wp' ) . '</a>';
 
 		return $links;
+	}
+
+	/**
+	 * Display an admin nag when plugin is active but API keys are missing
+	 *
+	 * @uses esc_html, _e, __, menu_page_url
+	 * @action admin_notices
+	 * @return string or null
+	 */
+	public function action_admin_notices() {
+		if ( ! $this->ready ) : ?>
+			<div id="message" class="error">
+				<p>
+					<strong><?php echo esc_html( $this->name ); ?>:</strong>
+					<?php _e( 'The plugin is active, but API keys are missing.', 'authy_for_wp' ); ?>
+				</p>
+				<p><?php _e( 'Until keys are entered, users cannot activate Authy on their accounts.', 'authy_for_wp' ); ?></p>
+				<p><?php printf( __( '<a href="%s">Click here to configure</a>.', 'authy_for_wp' ), menu_page_url( $this->settings_page, false ) ); ?></p>
+			</div>
+		<?php endif;
 	}
 
 	/**
