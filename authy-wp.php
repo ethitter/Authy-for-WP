@@ -387,7 +387,7 @@ class Authy_WP {
 	 * @uses this::api::send_sms
 	 * @return null
 	 */
-	public function check_sms_availability() { $this->sms = true;
+	public function check_sms_availability() {
 		if ( ! in_array( $this->api->send_sms( 1 ), array( 503, false ) ) )
 			$this->sms = true;
 	}
@@ -916,75 +916,105 @@ class Authy_WP {
 	}
 
 	/**
+	 * Render Ajax modal for SMS tokens at login
 	 *
+	 * @uses this::ajax_head, body_class, _e, esc_url, this::get_ajax_url, sanitize_user, esc_attr, wp_nonce_field, submit_button, __, wp_verify_nonce, get_user_by, is_wp_error, this::user_has_authy_id, this::api::send_sms, this::get_user_authy_id
+	 * @action wp_ajax_nopriv_{$this->sms_action}
+	 * @return string
 	 */
 	public function ajax_sms_login() {
-		// Do we have a username?
-		$username = isset( $_REQUEST['username'] ) ? sanitize_user( $_REQUEST['username'] ) : '';
-
-		// Step
-		$step = isset( $_REQUEST['authy_step'] ) ? preg_replace( '#[^a-z0-9\-_]#i', '', $_REQUEST['authy_step'] ) : false;
-
 		// iframe head
 		$this->ajax_head();
 
 		// iframe body
 		?><body <?php body_class( 'wp-admin wp-core-ui authy-wp-sms' ); ?>>
 			<div class="wrap">
-				<h2>Authy for WP</h2>
+				<h2>Authy for WP: <?php _e( 'SMS', 'authy_for_wp' ); ?></h2>
 
 				<form action="<?php echo esc_url( $this->get_ajax_url( 'sms' ) ); ?>" method="post">
 
 					<?php
-						switch( $step ) {
-							default : ?>
-								<p><?php _e( "If you don't have access to the Authy app, you can receive an token via SMS.", 'authy_for_wp' ); ?></p>
+						if ( ! $this->ready || ! $this->sms ) {
+						?>
+							<p><?php _e( "This feature isn't available at this time.", 'authy_for_wp' ); ?></p>
 
-								<p><?php _e( 'Enter your username to continue.', 'authy_for_wp' ); ?></p>
+							<p><a class="button button-primary" href="#" onClick="self.parent.tb_remove();return false;"><?php _e( 'Return to login', 'authy_for_wp' ); ?></a></p>
+						<?php
+						} else {
+							// Do we have a username?
+							$username = isset( $_REQUEST['username'] ) ? sanitize_user( $_REQUEST['username'] ) : '';
 
-								<table class="form-table" id="<?php echo esc_attr( $this->users_key ); ?>-ajax">
-									<tr>
-										<th><label for="username"><?php _e( 'Username', 'authy_for_wp' ); ?></label></th>
-										<td>
-											<input type="tel" class="regular-text" id="username" name="authy_username" value="<?php echo esc_attr( $username ); ?>" />
-										</td>
-									</tr>
-								</table>
+							// Step
+							$step = isset( $_REQUEST['authy_step'] ) ? preg_replace( '#[^a-z0-9\-_]#i', '', $_REQUEST['authy_step'] ) : false;
 
-								<input type="hidden" name="authy_step" value="check" />
-								<?php wp_nonce_field( $this->users_key . '_ajax_check' ); ?>
+							switch( $step ) {
+								default : ?>
+									<p><?php _e( "If you don't have access to the Authy app, you can receive an token via SMS.", 'authy_for_wp' ); ?></p>
 
-								<?php submit_button( __( 'Continue', 'authy_for_wp' ) );
+									<p><?php _e( 'Enter your username to continue.', 'authy_for_wp' ); ?></p>
 
-								break;
+									<table class="form-table" id="<?php echo esc_attr( $this->users_key ); ?>-ajax">
+										<tr>
+											<th><label for="username"><?php _e( 'Username', 'authy_for_wp' ); ?></label></th>
+											<td>
+												<input type="tel" class="regular-text" id="username" name="authy_username" value="<?php echo esc_attr( $username ); ?>" />
+											</td>
+										</tr>
+									</table>
 
-							case 'check' :
-								if ( isset( $_POST['_wpnonce'] ) && wp_verify_nonce( $_POST['_wpnonce'], $this->users_key . '_ajax_check' ) && isset( $_POST['authy_username'] ) ) {
-									$username = sanitize_user( $_POST['authy_username'] );
+									<input type="hidden" name="authy_step" value="check" />
+									<?php wp_nonce_field( $this->users_key . '_ajax_check' ); ?>
 
-									$user = get_user_by( 'login', $username );
+									<?php submit_button( __( 'Continue', 'authy_for_wp' ) );
 
-									if ( is_object( $user ) && ! is_wp_error( $user ) ) {
-										if ( $this->user_has_authy_id( $user->ID ) ) {
-											$sms = $this->api->send_sms( $this->get_user_authy_id( $user->ID ) );
+									break;
+
+								case 'check' :
+									if ( isset( $_POST['_wpnonce'] ) && wp_verify_nonce( $_POST['_wpnonce'], $this->users_key . '_ajax_check' ) && isset( $_POST['authy_username'] ) ) {
+										$username = sanitize_user( $_POST['authy_username'] );
+
+										$user = get_user_by( 'login', $username );
+
+										if ( is_object( $user ) && ! is_wp_error( $user ) ) {
+											if ( $this->user_has_authy_id( $user->ID ) ) {
+												$sms = $this->api->send_sms( $this->get_user_authy_id( $user->ID ), true );
+
+												if ( 200 == $sms ) {
+												?>
+													<p><?php printf( __( 'A text message containing an Authy token was sent to the mobile number used to enable Authy for the user account <strong>%s</strong>.', 'authy_for_wp' ), $username ); ?></p>
+
+													<p><?php printf( __( 'Once you receive the text message, enter the code from the text message in the &quot;%s&quot; login field.', 'authy_for_wp' ), __( 'Authy Token', 'authy_for_wp' ) ); ?></p>
+												<?php
+												} else {
+												?>
+													<p><?php printf( __( 'A problem occurred sending an Authy token by SMS. Please try again later.', 'authy_for_wp' ), $username ); ?></p>
+												<?php
+												}
+											} else {
+											?>
+												<p><?php printf( __( "Authy isn't enabled for the <strong>%s</strong> user account.", 'authy_for_wp' ), $username ); ?></p>
+
+												<p><?php _e( 'You can log in without providing an Authy ID.', 'authy_for_wp' ); ?></p>
+											<?php
+											}
+
+											?><p><a class="button button-primary" href="#" onClick="self.parent.tb_remove();return false;"><?php _e( 'Return to login', 'authy_for_wp' ); ?></a></p><?php
 										} else {
 										?>
-											<p><?php printf( __( "Authy isn't enabled for the <strong>%s</strong> user account.", 'authy_for_wp' ), $username ); ?></p>
+											<p><?php printf( __( "A WordPress user account for <strong>%s</strong> doesn't exist.", 'authy_for_wp' ), $username ); ?></p>
 
-											<p><?php _e( 'You can log in without providing an Authy ID.', 'authy_for_wp' ); ?></p>
+											<p><?php _e( 'Please check your username and try again.', 'authy_for_wp' ); ?></p>
 
-											<p><a class="button button-primary" href="#" onClick="self.parent.tb_remove();return false;"><?php _e( 'Return to login', 'authy_for_wp' ); ?></a></p>
+											<p><a class="button button-primary" href="<?php echo esc_url( $this->get_ajax_url( 'sms' ) ); ?>"><?php _e( 'Try again', 'authy_for_wp' ); ?></a></p>
 										<?php
 										}
 									} else {
-
+										wp_safe_redirect( $this->get_ajax_url( 'sms' ) );
+										exit;
 									}
-								} else {
-									wp_safe_redirect( $this->get_ajax_url( 'sms' ) );
-									exit;
-								}
 
-								break;
+									break;
+							}
 						}
 					?>
 				</form>
