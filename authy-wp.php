@@ -365,6 +365,8 @@ class Authy_WP {
 				.submit > * {
 					float: left;
 				}
+
+				.no-js .hide-if-no-js { display: none; }
 			</style>
 
 			<script type="text/javascript">
@@ -374,6 +376,8 @@ class Authy_WP {
 						$( '.authy-wp-user-modal p.submit .button, .authy-wp-sms p.submit .button' ).on( 'click.submitted', function() {
 							$( this ).siblings( '.spinner' ).show();
 						} );
+
+						$( 'body' ).addClass( 'js' ).removeClass( 'no-js' );
 					} );
 				})(jQuery);
 			</script>
@@ -387,7 +391,7 @@ class Authy_WP {
 	 * @uses this::api::send_sms
 	 * @return null
 	 */
-	public function check_sms_availability() {
+	public function check_sms_availability() { $this->sms = true;
 		if ( ! in_array( $this->api->send_sms( 1 ), array( 503, false ) ) )
 			$this->sms = true;
 	}
@@ -783,7 +787,7 @@ class Authy_WP {
 		$this->ajax_head();
 
 		// iframe body
-		?><body <?php body_class( 'wp-admin wp-core-ui authy-wp-user-modal' ); ?>>
+		?><body <?php body_class( 'wp-admin wp-core-ui authy-wp-user-modal no-js' ); ?>>
 			<div class="wrap">
 				<h2>Authy for WP</h2>
 
@@ -927,7 +931,7 @@ class Authy_WP {
 		$this->ajax_head();
 
 		// iframe body
-		?><body <?php body_class( 'wp-admin wp-core-ui authy-wp-sms' ); ?>>
+		?><body <?php body_class( 'wp-admin wp-core-ui authy-wp-sms no-js' ); ?>>
 			<div class="wrap">
 				<h2>Authy for WP: <?php _e( 'SMS', 'authy_for_wp' ); ?></h2>
 
@@ -938,7 +942,7 @@ class Authy_WP {
 						?>
 							<p><?php _e( "This feature isn't available at this time.", 'authy_for_wp' ); ?></p>
 
-							<p><a class="button button-primary" href="#" onClick="self.parent.tb_remove();return false;"><?php _e( 'Return to login', 'authy_for_wp' ); ?></a></p>
+							<p><a class="button button-primary hide-if-no-js" href="#" onClick="self.parent.tb_remove();return false;"><?php _e( 'Return to login', 'authy_for_wp' ); ?></a></p>
 						<?php
 						} else {
 							// Do we have a username?
@@ -998,7 +1002,7 @@ class Authy_WP {
 											<?php
 											}
 
-											?><p><a class="button button-primary" href="#" onClick="self.parent.tb_remove();return false;"><?php _e( 'Return to login', 'authy_for_wp' ); ?></a></p><?php
+											?><p><a class="button button-primary hide-if-no-js" href="#" onClick="self.parent.tb_remove();return false;"><?php _e( 'Return to login', 'authy_for_wp' ); ?></a></p><?php
 										} else {
 										?>
 											<p><?php printf( __( "A WordPress user account for <strong>%s</strong> doesn't exist.", 'authy_for_wp' ), $username ); ?></p>
@@ -1037,7 +1041,7 @@ class Authy_WP {
 			<label for="authy_token"><?php
 				_e( 'Authy Token', 'authy_for_wp' );
 
-				if ( $this->sms ) : ?> (<a href="#" id="authy-send-sms"><?php _e( 'Send SMS instead', 'authy_for_wp' ); ?></a>)<?php endif; ?>
+				if ( $this->sms ) : ?> (<a href="<?php echo esc_url( $this->get_ajax_url( 'sms' ) ); ?>" id="authy-send-sms" target="_blank"><?php _e( 'Send SMS instead', 'authy_for_wp' ); ?></a>)<?php endif; ?>
 			<br>
 			<input type="text" name="authy_token" id="authy_token" class="input" value="" size="20"></label>
 		</p>
