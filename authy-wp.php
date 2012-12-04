@@ -112,6 +112,7 @@ class Authy_WP {
 		add_filter( 'plugin_action_links', array( $this, 'filter_plugin_action_links' ), 10, 2 );
 
 		// Anything other than plugin configuration belongs in here.
+		// Important to consider plugin state so we only load code when needed.
 		if ( $this->ready ) {
 			// User settings
 			add_action( 'show_user_profile', array( $this, 'action_show_user_profile' ) );
