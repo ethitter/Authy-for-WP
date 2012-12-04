@@ -128,7 +128,13 @@ class Authy_WP_API {
 	}
 
 	/**
+	 * Attempt to send a token via SMS if the API key supports it.
+	 * By setting $force to true, an SMS is sent even if the user has configured the Authy App.
 	 *
+	 * @param int $authy_id
+	 * @param bool $force
+	 * @uses add_query_arg, wp_remote_get, wp_remote_retrieve_response_code
+	 * @return int|bool
 	 */
 	public function send_sms( $authy_id, $force = false ) {
 		// Build API endpoint
@@ -145,7 +151,8 @@ class Authy_WP_API {
 			$response = wp_remote_get( $endpoint );
 			$status_code = wp_remote_retrieve_response_code( $response );
 
-			return (int) $status_code;
+			if ( $status_code )
+				return (int) $status_code;
 		}
 
 		return false;
