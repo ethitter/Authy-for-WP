@@ -49,6 +49,7 @@ class Authy_WP {
 	// Interface keys
 	protected $settings_page = 'authy-for-wp';
 	protected $users_page = 'authy-for-wp-user';
+	protected $sms_action = 'authy-for-wp-sms';
 
 	// Data storage keys
 	protected $settings_key = 'authy_for_wp';
@@ -58,11 +59,11 @@ class Authy_WP {
 	protected $settings_fields = array();
 
 	protected $settings_field_defaults = array(
-		'label'    => null,
-		'type'     => 'text',
+		'label'     => null,
+		'type'      => 'text',
 		'sanitizer' => 'sanitize_text_field',
-		'section'  => 'default',
-		'class'    => null
+		'section'   => 'default',
+		'class'     => null
 	);
 
 	// Default Authy data
@@ -127,6 +128,8 @@ class Authy_WP {
 			add_action( 'edit_user_profile_update', array( $this, 'action_edit_user_profile_update' ) );
 
 			// Authentication
+			add_action( 'login_enqueue_scripts', array( $this, 'action_login_enqueue_scripts' ) );
+			add_action( 'wp_ajax_nopriv_' . $this->sms_action, array( $this, 'ajax_sms_login' ) );
 			add_action( 'login_form', array( $this, 'action_login_form' ), 50 );
 			add_filter( 'authenticate', array( $this, 'action_authenticate' ), 9999, 2 );
 		} else {
@@ -231,8 +234,8 @@ class Authy_WP {
 		if ( 'profile' == $current_screen->base ) {
 			wp_enqueue_script( 'authy-wp-profile', plugins_url( 'assets/authy-wp-profile.js', __FILE__ ), array( 'jquery', 'thickbox' ), 1.01, true );
 			wp_localize_script( 'authy-wp-profile', 'AuthyForWP', array(
-				'ajax' => $this->get_ajax_url(),
-				'th_text' => __( 'Connection', 'authy_for_wp' ),
+				'ajax'        => $this->get_ajax_url(),
+				'th_text'     => __( 'Connection', 'authy_for_wp' ),
 				'button_text' => __( 'Manage Authy Connection', 'authy_for_wp' )
 			) );
 
@@ -302,16 +305,79 @@ class Authy_WP {
 	}
 
 	/**
-	 * Build Ajax URL for users' connection management
+	 * Build Ajax URLs
 	 *
 	 * @uses add_query_arg, wp_create_nonce, admin_url
 	 * @return string
 	 */
-	protected function get_ajax_url() {
-		return add_query_arg( array(
-			'action' => $this->users_page,
-			'nonce' => wp_create_nonce( $this->users_key . '_ajax' )
-		), admin_url( 'admin-ajax.php' ) );
+	protected function get_ajax_url( $url = 'user' ) {
+		switch( $url ) {
+			default :
+			case 'user' :
+				return add_query_arg( array(
+					'action' => $this->users_page,
+					'nonce' => wp_create_nonce( $this->users_key . '_ajax' )
+				), admin_url( 'admin-ajax.php' ) );
+
+				break;
+
+			case 'sms' :
+				return add_query_arg( array(
+					'action'   => $this->sms_action,
+					'username' => ''
+				), admin_url( 'admin-ajax.php' ) );
+
+				break;
+		}
+	}
+
+	/**
+	 * Print common Ajax head element
+	 *
+	 * @uses wp_print_scripts, wp_print_styles
+	 * @return string
+	 */
+	protected function ajax_head() {
+		?><head>
+			<?php
+				wp_print_scripts( array( 'jquery' ) );
+				wp_print_styles( array( 'colors' ) );
+			?>
+
+			<style type="text/css">
+				body {
+					width: 450px;
+					height: 250px;
+					overflow: hidden;
+					padding: 0 10px 10px 10px;
+				}
+
+				div.wrap {
+					width: 450px;
+					height: 250px;
+					overflow: hidden;
+				}
+
+				table th label {
+					font-size: 12px;
+				}
+
+				.submit > * {
+					float: left;
+				}
+			</style>
+
+			<script type="text/javascript">
+				(function($){
+					$( document ).ready( function() {
+						$( '.authy-wp-user-modal p.submit, .authy-wp-sms p.submit' ).append( '<span class="spinner" style="display:none;"></span>' );
+						$( '.authy-wp-user-modal p.submit .button, .authy-wp-sms p.submit .button' ).on( 'click.submitted', function() {
+							$( this ).siblings( '.spinner' ).show();
+						} );
+					} );
+				})(jQuery);
+			</script>
+		</head><?php
 	}
 
 	/**
@@ -321,7 +387,7 @@ class Authy_WP {
 	 * @uses this::api::send_sms
 	 * @return null
 	 */
-	protected function check_sms_availability() {
+	public function check_sms_availability() { $this->sms = true;
 		if ( ! in_array( $this->api->send_sms( 1 ), array( 503, false ) ) )
 			$this->sms = true;
 	}
@@ -694,7 +760,7 @@ class Authy_WP {
 	/**
 	 * Ajax handler for users' connection manager
 	 *
-	 * @uses wp_verify_nonce, get_current_user_id, get_userdata, this::get_authy_data, wp_print_scripts, wp_print_styles, body_class, esc_url, this::get_ajax_url, this::user_has_authy_id, _e, __, submit_button, wp_nonce_field, esc_attr, this::clear_authy_data, wp_safe_redirect, sanitize_email, this::set_authy_data
+	 * @uses wp_verify_nonce, get_current_user_id, get_userdata, this::get_authy_data, this::ajax_head, body_class, esc_url, this::get_ajax_url, this::user_has_authy_id, _e, __, submit_button, wp_nonce_field, esc_attr, this::clear_authy_data, wp_safe_redirect, sanitize_email, this::set_authy_data
 	 * @action wp_ajax_{$this->users_page}
 	 * @return string
 	 */
@@ -714,46 +780,7 @@ class Authy_WP {
 		$step = isset( $_REQUEST['authy_step'] ) ? preg_replace( '#[^a-z0-9\-_]#i', '', $_REQUEST['authy_step'] ) : false;
 
 		// iframe head
-		?><head>
-			<?php
-				wp_print_scripts( array( 'jquery' ) );
-				wp_print_styles( array( 'colors' ) );
-			?>
-
-			<style type="text/css">
-				body {
-					width: 450px;
-					height: 250px;
-					overflow: hidden;
-					padding: 0 10px 10px 10px;
-				}
-
-				div.wrap {
-					width: 450px;
-					height: 250px;
-					overflow: hidden;
-				}
-
-				table th label {
-					font-size: 12px;
-				}
-
-				.submit > * {
-					float: left;
-				}
-			</style>
-
-			<script type="text/javascript">
-				(function($){
-					$( document ).ready( function() {
-						$( '.authy-wp-user-modal p.submit' ).append( '<span class="spinner" style="display:none;"></span>' );
-						$( '.authy-wp-user-modal p.submit .button' ).on( 'click.submitted', function() {
-							$( this ).siblings( '.spinner' ).show();
-						} );
-					} );
-				})(jQuery);
-			</script>
-		</head><?php
+		$this->ajax_head();
 
 		// iframe body
 		?><body <?php body_class( 'wp-admin wp-core-ui authy-wp-user-modal' ); ?>>
@@ -783,14 +810,14 @@ class Authy_WP {
 										<tr>
 											<th><label for="phone"><?php _e( 'Mobile number', 'authy_for_wp' ); ?></label></th>
 											<td>
-												<input type="tel" class="regular-text" name="authy_phone" value="<?php echo esc_attr( $authy_data['phone'] ); ?>" />
+												<input type="tel" class="regular-text" id="phone" name="authy_phone" value="<?php echo esc_attr( $authy_data['phone'] ); ?>" />
 											</td>
 										</tr>
 
 										<tr>
-											<th><label for="phone"><?php _e( 'Country code', 'authy_for_wp' ); ?></label></th>
+											<th><label for="country_code"><?php _e( 'Country code', 'authy_for_wp' ); ?></label></th>
 											<td>
-												<input type="text" class="small-text" name="authy_country_code" value="<?php echo esc_attr( $authy_data['country_code'] ); ?>" />
+												<input type="text" class="small-text" id="country_code" name="authy_country_code" value="<?php echo esc_attr( $authy_data['country_code'] ); ?>" />
 											</td>
 										</tr>
 									</table>
@@ -844,7 +871,6 @@ class Authy_WP {
 								exit;
 
 								break;
-
 						}
 					?>
 				</form>
@@ -874,6 +900,101 @@ class Authy_WP {
 	 */
 
 	/**
+	 * Enqueue scripts to support SMS integration, if available
+	 *
+	 * @uses wp_enqueue_script, plugins_url, wp_enqueue_style
+	 * @action login_enqueue_scripts
+	 * @return null
+	 */
+	public function action_login_enqueue_scripts() {
+		if ( $this->ready && $this->sms ) {
+			wp_enqueue_script( 'authy-wp-login', plugins_url( 'assets/authy-wp-login.js', __FILE__ ), array( 'jquery', 'thickbox' ), 1.0, false );
+			wp_localize_script( 'authy-wp-login', 'AuthyForWP', array( 'ajax' => $this->get_ajax_url( 'sms' ) ) );
+
+			wp_enqueue_style( 'thickbox' );
+		}
+	}
+
+	/**
+	 *
+	 */
+	public function ajax_sms_login() {
+		// Do we have a username?
+		$username = isset( $_REQUEST['username'] ) ? sanitize_user( $_REQUEST['username'] ) : '';
+
+		// Step
+		$step = isset( $_REQUEST['authy_step'] ) ? preg_replace( '#[^a-z0-9\-_]#i', '', $_REQUEST['authy_step'] ) : false;
+
+		// iframe head
+		$this->ajax_head();
+
+		// iframe body
+		?><body <?php body_class( 'wp-admin wp-core-ui authy-wp-sms' ); ?>>
+			<div class="wrap">
+				<h2>Authy for WP</h2>
+
+				<form action="<?php echo esc_url( $this->get_ajax_url( 'sms' ) ); ?>" method="post">
+
+					<?php
+						switch( $step ) {
+							default : ?>
+								<p><?php _e( "If you don't have access to the Authy app, you can receive an token via SMS.", 'authy_for_wp' ); ?></p>
+
+								<p><?php _e( 'Enter your username to continue.', 'authy_for_wp' ); ?></p>
+
+								<table class="form-table" id="<?php echo esc_attr( $this->users_key ); ?>-ajax">
+									<tr>
+										<th><label for="username"><?php _e( 'Username', 'authy_for_wp' ); ?></label></th>
+										<td>
+											<input type="tel" class="regular-text" id="username" name="authy_username" value="<?php echo esc_attr( $username ); ?>" />
+										</td>
+									</tr>
+								</table>
+
+								<input type="hidden" name="authy_step" value="check" />
+								<?php wp_nonce_field( $this->users_key . '_ajax_check' ); ?>
+
+								<?php submit_button( __( 'Continue', 'authy_for_wp' ) );
+
+								break;
+
+							case 'check' :
+								if ( isset( $_POST['_wpnonce'] ) && wp_verify_nonce( $_POST['_wpnonce'], $this->users_key . '_ajax_check' ) && isset( $_POST['authy_username'] ) ) {
+									$username = sanitize_user( $_POST['authy_username'] );
+
+									$user = get_user_by( 'login', $username );
+
+									if ( is_object( $user ) && ! is_wp_error( $user ) ) {
+										if ( $this->user_has_authy_id( $user->ID ) ) {
+											$sms = $this->api->send_sms( $this->get_user_authy_id( $user->ID ) );
+										} else {
+										?>
+											<p><?php printf( __( "Authy isn't enabled for the <strong>%s</strong> user account.", 'authy_for_wp' ), $username ); ?></p>
+
+											<p><?php _e( 'You can log in without providing an Authy ID.', 'authy_for_wp' ); ?></p>
+
+											<p><a class="button button-primary" href="#" onClick="self.parent.tb_remove();return false;"><?php _e( 'Return to login', 'authy_for_wp' ); ?></a></p>
+										<?php
+										}
+									} else {
+
+									}
+								} else {
+									wp_safe_redirect( $this->get_ajax_url( 'sms' ) );
+									exit;
+								}
+
+								break;
+						}
+					?>
+				</form>
+			</div>
+		</body><?php
+
+		exit;
+	}
+
+	/**
 	 * Add Authy input field to login page
 	 *
 	 * @uses _e
@@ -883,7 +1004,11 @@ class Authy_WP {
 	public function action_login_form() {
 		?>
 		<p>
-			<label for="authy_token"><?php _e( 'Authy Token', 'authy_for_wp' ); ?><br>
+			<label for="authy_token"><?php
+				_e( 'Authy Token', 'authy_for_wp' );
+
+				if ( $this->sms ) : ?> (<a href="#" id="authy-send-sms"><?php _e( 'Send SMS instead', 'authy_for_wp' ); ?></a>)<?php endif; ?>
+			<br>
 			<input type="text" name="authy_token" id="authy_token" class="input" value="" size="20"></label>
 		</p>
 		<?php
