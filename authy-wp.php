@@ -39,6 +39,7 @@ class Authy_WP {
 
 	// Is API ready, should plugin act?
 	protected $ready = false;
+	protected $sms = false;
 
 	// Authy API
 	protected $api = null;
@@ -114,6 +115,9 @@ class Authy_WP {
 		// Anything other than plugin configuration belongs in here.
 		// Important to consider plugin state so we only load code when needed.
 		if ( $this->ready ) {
+			// Check SMS availability
+			add_action( 'init', array( $this, 'check_sms_availability' ) );
+
 			// User settings
 			add_action( 'show_user_profile', array( $this, 'action_show_user_profile' ) );
 			add_action( 'edit_user_profile', array( $this, 'action_edit_user_profile' ) );
@@ -308,6 +312,18 @@ class Authy_WP {
 			'action' => $this->users_page,
 			'nonce' => wp_create_nonce( $this->users_key . '_ajax' )
 		), admin_url( 'admin-ajax.php' ) );
+	}
+
+	/**
+	 * Check basic SMS availability.
+	 * Subscription level dictates availability.
+	 *
+	 * @uses this::api::send_sms
+	 * @return null
+	 */
+	protected function check_sms_availability() {
+		if ( 503 != $this->api->send_sms( 1 ) )
+			$this->sms = true;
 	}
 
 	/**

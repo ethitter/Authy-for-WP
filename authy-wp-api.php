@@ -126,4 +126,28 @@ class Authy_WP_API {
 
 		return false;
 	}
+
+	/**
+	 *
+	 */
+	public function send_sms( $authy_id, $force = false ) {
+		// Build API endpoint
+		$endpoint = sprintf( '%s/protected/json/sms/%d', $this->api_endpoint, $authy_id );
+		$endpoint = add_query_arg( array(
+			'api_key' => $this->api_key
+		), $endpoint );
+
+		if ( $force )
+			$endpoint = add_query_arg( 'force', 'true', $endpoint );
+
+		// Make API request up to three times and check responding status code
+		for ( $i = 1; $i <= 3; $i ++ ) {
+			$response = wp_remote_get( $endpoint );
+			$status_code = wp_remote_retrieve_response_code( $response );
+
+			return (int) $status_code;
+		}
+
+		return false;
+	}
 }
