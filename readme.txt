@@ -32,5 +32,8 @@ Any administrator (anyone with the `create_users` capability, actually) can disa
 
 == Changelog ==
 
+= 0.2 =
+* Receive tokens via SMS if the Authy account supports it.
+
 = 0.1 =
 * Initial public release.
