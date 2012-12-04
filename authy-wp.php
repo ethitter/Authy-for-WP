@@ -721,11 +721,26 @@ class Authy_WP {
 				table th label {
 					font-size: 12px;
 				}
+
+				.submit > * {
+					float: left;
+				}
 			</style>
+
+			<script type="text/javascript">
+				(function($){
+					$( document ).ready( function() {
+						$( '.authy-wp-user-modal p.submit' ).append( '<span class="spinner" style="display:none;"></span>' );
+						$( '.authy-wp-user-modal p.submit .button' ).on( 'click.submitted', function() {
+							$( this ).siblings( '.spinner' ).show();
+						} );
+					} );
+				})(jQuery);
+			</script>
 		</head><?php
 
 		// iframe body
-		?><body <?php body_class( 'wp-admin wp-core-ui' ); ?>>
+		?><body <?php body_class( 'wp-admin wp-core-ui authy-wp-user-modal' ); ?>>
 			<div class="wrap">
 				<h2>Authy for WP</h2>
 
