@@ -391,7 +391,7 @@ class Authy_WP {
 	 * @uses this::api::send_sms
 	 * @return null
 	 */
-	public function check_sms_availability() { $this->sms = true;
+	public function check_sms_availability() {
 		if ( ! in_array( $this->api->send_sms( 1 ), array( 503, false ) ) )
 			$this->sms = true;
 	}
