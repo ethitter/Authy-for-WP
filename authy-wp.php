@@ -24,6 +24,14 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
+/**
+ * AUTHY FOR WORDPRESS
+ * Main plugin class
+ *
+ * @package Authy for WordPress
+ * @since 0.1
+ */
+
 class Authy_WP {
 	/**
 	 * Class variables
