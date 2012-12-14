@@ -3,7 +3,7 @@ Contributors: ethitter
 Tags: authentication, authy, two factor, security, login, authenticate
 Requires at least: 3.5
 Tested up to: 3.5
-Stable tag: 0.1
+Stable tag: 0.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -13,6 +13,8 @@ Add Authy two-factor authentication to WordPress. Users opt in for an added leve
 Enable the plugin, enter your [Authy](http://www.authy.com/) API keys, and your users can enable Authy on their accounts.
 
 Once users configure Authy through their WordPress user profiles, any login attempts will require an Authy token in addition to the account username and password.
+
+For users with mobile devices that don't support the Authy app, they can receive their tokens via SMS.
 
 Plugin development is found at https://github.com/ethitter/Authy-for-WP.
 
@@ -33,7 +35,7 @@ Any administrator (anyone with the `create_users` capability, actually) can disa
 == Changelog ==
 
 = 0.2 =
-* Receive tokens via SMS if the Authy account supports it.
+* Receive tokens via SMS if the site's Authy account supports it. Requires at least the [free starter plan](http://www.authy.com/pricing).
 
 = 0.1 =
 * Initial public release.
