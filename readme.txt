@@ -32,6 +32,10 @@ The user should return to his or her WordPress profile screen and manage connect
 = What if a user loses the mobile device? =
 Any administrator (anyone with the `create_users` capability, actually) can disable Authy on a given user account by navigating to that user's WordPress account profile, and following the instructions under **Authy for WordPress**.
 
+== Screenshots ==
+1. Authy token field added to the WordPress login form.
+2. Users manage their individual Authy settings through their WordPress profiles.
+
 == Changelog ==
 
 = 0.2 =
@@ -39,3 +43,8 @@ Any administrator (anyone with the `create_users` capability, actually) can disa
 
 = 0.1 =
 * Initial public release.
+
+== Upgrade Notice ==
+
+= 0.2 =
+Support users with mobile devices that don't support the Authy app by letting them receive keys via SMS (text message).
