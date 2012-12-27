@@ -675,7 +675,7 @@ class Authy_WP {
 	 * For backwards compatibility, we assume that all users can use Authy if plugin settings haven't been saved since updating from v0.2.
 	 *
 	 * @param int $user_id
-	 * @uses this::get_setting, user_can
+	 * @uses is_super_admin, this::get_setting, user_can
 	 * @return bool
 	 */
 	protected function users_role_allowed( $user_id ) {
@@ -683,6 +683,9 @@ class Authy_WP {
 
 		if ( ! $user_id )
 			return false;
+
+		if ( is_super_admin( $user_id ) )
+			return true;
 
 		$selected_roles = $this->get_setting( 'roles' );
 
