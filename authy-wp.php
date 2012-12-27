@@ -706,7 +706,7 @@ class Authy_WP {
 	 * Check if a given user has an Authy ID set
 	 *
 	 * @param int $user_id
-	 * @uses this::get_user_authy_id
+	 * @uses this::users_role_allowed, this::get_user_authy_id
 	 * @return bool
 	 */
 	protected function user_has_authy_id( $user_id ) {
