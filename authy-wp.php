@@ -4,7 +4,7 @@
  * Plugin URI: http://www.ethitter.com/plugins/authy-for-wordpress/
  * Description: Add <a href="http://www.authy.com/">Authy</a> two-factor authentication to WordPress. Users opt in for an added level of security that relies on random codes from their mobile devices.
  * Author: Erick Hitter
- * Version: 0.2
+ * Version: 0.3
  * Author URI: http://www.ethitter.com/
  * License: GPL2+
  * Text Domain: authy_for_wp
@@ -164,6 +164,12 @@ class Authy_WP {
 				'label'     => __( 'Development API Key', 'authy_wp' ),
 				'type'      => 'text',
 				'sanitizer' => 'alphanumeric'
+			),
+			array(
+				'name'      => 'roles',
+				'label'     => __( 'Roles', 'authy_wp' ),
+				'type'      => 'roles',
+				'sanitizer' => null
 			)
 		);
 	}
@@ -446,6 +452,29 @@ class Authy_WP {
 	}
 
 	/**
+	 *
+	 */
+	public function form_field_roles( $args ) {
+		$args = wp_parse_args( $args, $this->settings_field_defaults );
+
+		$name = esc_attr( $args['name'] );
+		if ( empty( $name ) )
+			return;
+
+		$selected_roles = $this->get_setting( $args['name'] );
+
+		$roles = get_editable_roles();
+
+		if ( empty( $roles ) ) {
+			printf( __( 'You are not able to specify the roles available for use with %s.', 'authy_wp' ), $this->name );
+		} else {
+			foreach ( $roles as $role => $details ) {
+				?><input type="checkbox" name="<?php echo esc_attr( $this->settings_key ); ?>[<?php echo $name; ?>][]" id="field-<?php echo $name; ?>-<?php echo esc_attr( $role ); ?>" value="<?php echo esc_attr( $role ); ?>"<?php checked( in_array( $role, $selected_roles ) ); ?> /> <label for="field-<?php echo $name; ?>-<?php echo esc_attr( $role ); ?>"><?php echo translate_user_role( $details['name'] ); ?></label><br /><?php
+			}
+		}
+	}
+
+	/**
 	 * Render settings page
 	 *
 	 * @uses screen_icon, esc_html, get_admin_page_title, settings_fields, do_settings_sections, submit_button
@@ -482,7 +511,7 @@ class Authy_WP {
 	 * Validate plugin settings
 	 *
 	 * @param array $settings
-	 * @uses check_admin_referer, wp_parse_args, sanitize_text_field
+	 * @uses check_admin_referer, wp_parse_args, sanitize_text_field, get_editable_roles
 	 * @return array
 	 */
 	public function validate_plugin_settings( $settings ) {
@@ -498,16 +527,32 @@ class Authy_WP {
 
 			switch ( $field['type'] ) {
 				case 'text' :
-						switch ( $field['sanitizer'] ) {
-							case 'alphanumeric' :
-								$value = preg_replace( '#[^a-z0-9]#i', '', $settings[ $field['name' ] ] );
-								break;
+					switch ( $field['sanitizer'] ) {
+						case 'alphanumeric' :
+							$value = preg_replace( '#[^a-z0-9]#i', '', $settings[ $field['name' ] ] );
+							break;
 
-							default:
-							case 'sanitize_text_field' :
-								$value = sanitize_text_field( $settings[ $field['name'] ] );
-								break;
-						}
+						default:
+						case 'sanitize_text_field' :
+							$value = sanitize_text_field( $settings[ $field['name'] ] );
+							break;
+					}
+					break;
+
+				case 'roles' :
+					$roles = get_editable_roles();
+
+					if ( empty( $roles ) )
+						$roles = array();
+
+					$roles = array_keys( $roles );
+
+					$value = array();
+
+					foreach ( $settings[ $field['name'] ] as $role ) {
+						if ( in_array( $role, $roles ) )
+							$value[] = $role;
+					}
 					break;
 
 				default:
