@@ -105,11 +105,11 @@ class Authy_WP {
 	/**
 	 * Plugin setup
 	 *
-	 * @uses this::register_settings_fields, this::prepare_api, add_action, add_filter
+	 * @uses plugin_dir_path, this::register_settings_fields, this::prepare_api, add_action, add_filter
 	 * @return null
 	 */
 	private function setup() {
-		require( 'authy-wp-api.php' );
+		require( plugin_dir_path( __FILE__ ) . 'authy-wp-api.php' );
 
 		$this->register_settings_fields();
 		$this->prepare_api();
@@ -185,6 +185,20 @@ class Authy_WP {
 			'production'  => 'https://api.authy.com',
 			'development' => 'http://sandbox-api.authy.com'
 		);
+
+		// Capture API keys set via wp-config
+		if ( ( defined( 'AUTHY_API_KEY_PRODUCTION' ) && AUTHY_API_KEY_PRODUCTION ) || ( defined( 'AUTHY_API_KEY_DEVELOPMENT' ) && AUTHY_API_KEY_DEVELOPMENT ) ) {
+			if ( ! is_array( $this->settings ) )
+				$this->settings = array();
+
+			if ( defined( 'AUTHY_API_KEY_PRODUCTION' ) && AUTHY_API_KEY_PRODUCTION )
+				$this->settings['api_key_production'] = AUTHY_API_KEY_PRODUCTION;
+
+			if ( defined( 'AUTHY_API_KEY_DEVELOPMENT' ) && AUTHY_API_KEY_DEVELOPMENT )
+				$this->settings['api_key_development'] = AUTHY_API_KEY_DEVELOPMENT;
+
+			$this->settings['environment'] = defined( 'AUTHY_ENVIRONMENT' ) && AUTHY_ENVIRONMENT ? AUTHY_ENVIRONMENT : 'production';
+		}
 
 		// Plugin page accepts keys for production and development.
 		// Cannot be toggled except via the `authy_wp_environment` filter.
@@ -433,7 +447,7 @@ class Authy_WP {
 	 * Render text input
 	 *
 	 * @param array $args
-	 * @uses wp_parse_args, esc_attr, this::get_setting, esc_attr
+	 * @uses wp_parse_args, esc_attr, disabled, this::get_setting, esc_attr
 	 * @return string or null
 	 */
 	public function form_field_text( $args ) {
@@ -446,9 +460,15 @@ class Authy_WP {
 		if ( is_null( $args['class'] ) )
 			$args['class'] = 'regular-text';
 
-		$value = $this->get_setting( $args['name'] );
+		if ( defined( 'AUTHY_' . strtoupper( $args['name'] ) ) && constant( 'AUTHY_' . strtoupper( $args['name'] ) ) ) :
+			?><input type="text" class="<?php echo esc_attr( $args['class'] ); ?>" id="field-<?php echo $name; ?>" value="<?php echo esc_attr( constant( 'AUTHY_' . strtoupper( $args['name'] ) ) ); ?>" readonly="readonly" />
 
-		?><input type="text" name="<?php echo esc_attr( $this->settings_key ); ?>[<?php echo $name; ?>]" class="<?php echo esc_attr( $args['class'] ); ?>" id="field-<?php echo $name; ?>" value="<?php echo esc_attr( $value ); ?>" /><?php
+			<p class="description"><?php _e( 'This value is set in your site\'s <code>wp-config.php</code> file and cannot be changed here.', 'authy_wp' ); ?></p><?php
+		else :
+			$value = $this->get_setting( $args['name'] );
+
+			?><input type="text" name="<?php echo esc_attr( $this->settings_key ); ?>[<?php echo $name; ?>]" class="<?php echo esc_attr( $args['class'] ); ?>" id="field-<?php echo $name; ?>" value="<?php echo esc_attr( $value ); ?>" /><?php
+		endif;
 	}
 
 	/**
@@ -492,7 +512,7 @@ class Authy_WP {
 			<h2><?php echo $plugin_name; ?></h2>
 
 			<?php if ( $this->ready ) : ?>
-				<p><?php _e( "With API keys entered, your users can now enable Authy on their individual accounts by visting their user profile pages.", 'authy_for_wp' ); ?></p>
+				<p><?php _e( "With API keys provided, your users can now enable Authy on their individual accounts by visting their user profile pages.", 'authy_for_wp' ); ?></p>
 			<?php else : ?>
 				<p><?php printf( __( 'To use the Authy service, you must register an account at <a href="%1$s"><strong>%1$s</strong></a> and create an application for access to the Authy API.', 'authy_for_wp' ), 'http://www.authy.com/' ); ?></p>
 				<p><?php _e( "Once you've created your application, enter your API keys in the fields below.", 'authy_for_wp' ); ?></p>
