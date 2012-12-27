@@ -192,12 +192,12 @@ class Authy_WP {
 				$this->settings = array();
 
 			if ( defined( 'AUTHY_API_KEY_PRODUCTION' ) && AUTHY_API_KEY_PRODUCTION )
-				$this->settings['api_key_production'] = AUTHY_API_KEY_PRODUCTION;
+				$this->settings['api_key_production'] = $this->sanitize_alphanumeric( AUTHY_API_KEY_PRODUCTION );
 
 			if ( defined( 'AUTHY_API_KEY_DEVELOPMENT' ) && AUTHY_API_KEY_DEVELOPMENT )
-				$this->settings['api_key_development'] = AUTHY_API_KEY_DEVELOPMENT;
+				$this->settings['api_key_development'] = $this->sanitize_alphanumeric( AUTHY_API_KEY_DEVELOPMENT );
 
-			$this->settings['environment'] = defined( 'AUTHY_ENVIRONMENT' ) && AUTHY_ENVIRONMENT ? AUTHY_ENVIRONMENT : 'production';
+			$this->settings['environment'] = defined( 'AUTHY_ENVIRONMENT' ) && isset( $endpoints[ AUTHY_ENVIRONMENT ] ) ? AUTHY_ENVIRONMENT : 'production';
 		}
 
 		// Plugin page accepts keys for production and development.
@@ -426,6 +426,16 @@ class Authy_WP {
 	}
 
 	/**
+	 * Ensure a given value only contains alphanumeric characters
+	 *
+	 * @param string $value
+	 * @return string
+	 */
+	protected function sanitize_alphanumeric( $value ) {
+		return preg_replace( '#[^a-z0-9]#i', '', $value );
+	}
+
+	/**
 	 * GENERAL OPTIONS PAGE
 	 */
 
@@ -553,7 +563,7 @@ class Authy_WP {
 				case 'text' :
 					switch ( $field['sanitizer'] ) {
 						case 'alphanumeric' :
-							$value = preg_replace( '#[^a-z0-9]#i', '', $settings[ $field['name' ] ] );
+							$value = $this->sanitize_alphanumeric( $settings[ $field['name' ] ] );
 							break;
 
 						default:
@@ -660,7 +670,7 @@ class Authy_WP {
 		if ( is_null( $api_key ) )
 			$api_key = $this->api_key;
 		else
-			$api_key = preg_replace( '#[a-z0-9]#i', '', $api_key );
+			$api_key = $this->sanitize_alphanumeric( $api_key );
 
 		// Get meta, which holds all Authy data by API key
 		$data = get_user_meta( $user_id, $this->users_key, true );
