@@ -452,7 +452,11 @@ class Authy_WP {
 	}
 
 	/**
+	 * Render Roles input fields
 	 *
+	 * @param array $args
+	 * @uses wp_parse_args, esc_attr, this::get_setting, get_editable_roles, __, checked, translate_user_role
+	 * @return string or null
 	 */
 	public function form_field_roles( $args ) {
 		$args = wp_parse_args( $args, $this->settings_field_defaults );
@@ -663,6 +667,42 @@ class Authy_WP {
 	}
 
 	/**
+	 * Check if Authy is enabled for user's assigned role.
+	 *
+	 * user_can() lets one check a role, and while it's almost always wrong to do so, it's appropriate here.
+	 * Yes, part of me died a bit when I did this; see http://erick.me/15.
+	 *
+	 * For backwards compatibility, we assume that all users can use Authy if plugin settings haven't been saved since updating from v0.2.
+	 *
+	 * @param int $user_id
+	 * @uses this::get_setting, user_can
+	 * @return bool
+	 */
+	protected function users_role_allowed( $user_id ) {
+		$user_id = (int) $user_id;
+
+		if ( ! $user_id )
+			return false;
+
+		$selected_roles = $this->get_setting( 'roles' );
+
+		if ( is_array( $selected_roles ) ) {
+			$allowed = false;
+
+			foreach ( $selected_roles as $role ) {
+				if ( user_can( $user_id, $role ) ) {
+					$allowed = true;
+					break;
+				}
+			}
+
+			return $allowed;
+		} else {
+			return true;
+		}
+	}
+
+	/**
 	 * Check if a given user has an Authy ID set
 	 *
 	 * @param int $user_id
@@ -670,6 +710,9 @@ class Authy_WP {
 	 * @return bool
 	 */
 	protected function user_has_authy_id( $user_id ) {
+		if ( ! $this->users_role_allowed( $user_id ) )
+			return false;
+
 		return (bool) $this->get_user_authy_id( $user_id );
 	}
 
@@ -698,9 +741,14 @@ class Authy_WP {
 	 * Non-JS connection interface
 	 *
 	 * @param object $user
-	 * @uses this::get_authy_data, esc_attr,
+	 * @uses this::users_role_allowed, this::get_authy_data, esc_attr
 	 */
 	public function action_show_user_profile( $user ) {
+		// Don't bother if the user's role can't use Authy
+		if ( ! $this->users_role_allowed( $user->ID ) )
+			return;
+
+		// User's Authy data
 		$meta = $this->get_authy_data( $user->ID );
 	?>
 		<h3><?php echo esc_html( $this->name ); ?></h3>
@@ -823,14 +871,15 @@ class Authy_WP {
 	 * @return string
 	 */
 	public function ajax_get_id() {
+		$user_id = get_current_user_id();
+
 		// If nonce isn't set, bail
-		if ( ! isset( $_REQUEST['nonce'] ) || ! wp_verify_nonce( $_REQUEST['nonce'], $this->users_key . '_ajax' ) ) {
+		if ( ! isset( $_REQUEST['nonce'] ) || ! wp_verify_nonce( $_REQUEST['nonce'], $this->users_key . '_ajax' ) || ! $this->users_role_allowed( $user_id ) ) {
 			?><script type="text/javascript">self.parent.tb_remove();</script><?php
 			exit;
 		}
 
 		// User data
-		$user_id = get_current_user_id();
 		$user_data = get_userdata( $user_id );
 		$authy_data = $this->get_authy_data( $user_id );
 
