@@ -827,12 +827,12 @@ class Authy_WP {
 	 * Allow sufficiently-priviledged users to disable another user's Authy service.
 	 *
 	 * @param object $user
-	 * @uses current_user_can, this::user_has_authy_id, get_user_meta, wp_parse_args, esc_attr, wp_nonce_field
+	 * @uses current_user_can, this::users_role_allowed, this::user_has_authy_id, get_user_meta, wp_parse_args, esc_attr, wp_nonce_field
 	 * @action edit_user_profile
 	 * @return string
 	 */
 	public function action_edit_user_profile( $user ) {
-		if ( current_user_can( 'create_users' ) ) {
+		if ( current_user_can( 'create_users' ) && $this->users_role_allowed( $user->ID ) ) {
 		?>
 			<h3>Authy Two-factor Authentication</h3>
 
