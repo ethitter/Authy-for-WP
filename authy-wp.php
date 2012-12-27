@@ -400,7 +400,8 @@ class Authy_WP {
 	 * @return null
 	 */
 	public function check_sms_availability() {
-		if ( ! in_array( $this->api->send_sms( 1 ), array( 503, false ) ) )
+		// SMS availability check disabled per https://github.com/ethitter/Authy-for-WP/issues/11
+		// if ( ! in_array( $this->api->send_sms( 1 ), array( 503, false ) ) )
 			$this->sms = true;
 	}
 
