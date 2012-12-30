@@ -1179,7 +1179,7 @@ class Authy_WP {
 
 				if ( $this->sms ) : ?> (<a href="<?php echo esc_url( $this->get_ajax_url( 'sms' ) ); ?>" id="authy-send-sms" target="_blank"><?php _e( 'Send SMS instead', 'authy_for_wp' ); ?></a>)<?php endif; ?>
 			<br>
-			<input type="text" name="authy_token" id="authy_token" class="input" value="" size="20"></label>
+			<input type="text" name="authy_token" id="authy_token" class="input" value="" size="20" autocomplete="off"></label>
 		</p>
 		<?php
 	}
