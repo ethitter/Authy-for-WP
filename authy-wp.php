@@ -337,7 +337,10 @@ class Authy_WP {
 		$value = false;
 
 		if ( is_null( $this->settings ) || ! is_array( $this->settings ) ) {
-			$this->settings = get_option( $this->settings_key );
+			$this->settings = get_option( $this->settings_key, array() );
+
+			$this->settings['roles_set'] = ( ! empty( $this->settings ) && array_key_exists( 'roles', $this->settings ) );
+
 			$this->settings = wp_parse_args( $this->settings, array(
 				'api_key_production'  => '',
 				'api_key_development' => '',
@@ -542,11 +545,11 @@ class Authy_WP {
 			<h2><?php echo $plugin_name; ?></h2>
 
 			<?php if ( $this->ready ) : ?>
-				<p><?php _e( "With API keys provided, your users can now enable Authy on their individual accounts by visting their user profile pages.", 'authy_for_wp' ); ?></p>
+				<p><?php _e( 'With API keys provided, your users can now enable Authy on their individual accounts by visting their user profile pages.', 'authy_for_wp' ); ?></p>
 			<?php else : ?>
 				<p><?php printf( __( 'To use the Authy service, you must register an account at <a href="%1$s"><strong>%1$s</strong></a> and create an application for access to the Authy API.', 'authy_for_wp' ), 'http://www.authy.com/' ); ?></p>
 				<p><?php _e( "Once you've created your application, enter your API keys in the fields below.", 'authy_for_wp' ); ?></p>
-				<p><?php printf( __( "Until your API keys are entered, the %s plugin cannot function.", 'authy_for_wp' ), $plugin_name ); ?></p>
+				<p><?php printf( __( 'Until your API keys are entered, the %s plugin cannot function.', 'authy_for_wp' ), $plugin_name ); ?></p>
 			<?php endif; ?>
 
 			<form action="options.php" method="post">
@@ -729,14 +732,22 @@ class Authy_WP {
 	 * @return bool
 	 */
 	protected function users_role_allowed( $user_id ) {
+		// Make sure we have a user ID, otherwise abort
 		$user_id = (int) $user_id;
 
 		if ( ! $user_id )
 			return false;
 
+		// Super Admins get a pass
 		if ( is_super_admin( $user_id ) )
 			return true;
 
+		// Bypass this check if plugin was upgraded from v0.2 but new role settings haven't been set
+		if ( ! $this->get_setting( 'roles_set' ) )
+			return true;
+
+		// Parse role settings
+		// If, somehow, `roles` is set but isn't an array, plugin is enabled for all users to mimick pre v0.3 behaviour.
 		$selected_roles = $this->get_setting( 'roles' );
 
 		if ( is_array( $selected_roles ) ) {
