@@ -152,6 +152,11 @@ class Authy_WP {
 			add_action( 'wp_ajax_nopriv_' . $this->sms_action, array( $this, 'ajax_sms_login' ) );
 			add_action( 'login_form', array( $this, 'action_login_form' ), 50 );
 			add_filter( 'authenticate', array( $this, 'action_authenticate' ), 9999, 2 );
+
+			// Authy assets
+			$version = date( 'Ymd' );
+			wp_register_script( 'authy', 'https://www.authy.com/form.authy.min.js', array(), $version, false );
+			wp_register_style( 'authy', 'https://www.authy.com/form.authy.min.css', array(), $version, 'screen' );
 		} else {
 			add_action( 'admin_notices', array( $this, 'action_admin_notices' ) );
 		}
@@ -383,8 +388,8 @@ class Authy_WP {
 	protected function ajax_head() {
 		?><head>
 			<?php
-				wp_print_scripts( array( 'jquery' ) );
-				wp_print_styles( array( 'colors' ) );
+				wp_print_scripts( array( 'jquery', 'authy' ) );
+				wp_print_styles( array( 'colors', 'authy' ) );
 			?>
 
 			<style type="text/css">
@@ -963,16 +968,15 @@ class Authy_WP {
 
 									<table class="form-table" id="<?php echo esc_attr( $this->users_key ); ?>-ajax">
 										<tr>
-											<th><label for="phone"><?php _e( 'Mobile number', 'authy_for_wp' ); ?></label></th>
+											<th><label for="authy-countries"><?php _e( 'Country', 'authy_for_wp' ); ?></label></th>
 											<td>
-												<input type="tel" class="regular-text" id="phone" name="authy_phone" value="<?php echo esc_attr( $authy_data['phone'] ); ?>" />
+												<input type="text" class="small-text" id="authy-countries" name="authy_country_code" value="<?php echo esc_attr( $authy_data['country_code'] ); ?>" />
 											</td>
 										</tr>
-
 										<tr>
-											<th><label for="country_code"><?php _e( 'Country code', 'authy_for_wp' ); ?></label></th>
+											<th><label for="authy-cellphone"><?php _e( 'Mobile number', 'authy_for_wp' ); ?></label></th>
 											<td>
-												<input type="text" class="small-text" id="country_code" name="authy_country_code" value="<?php echo esc_attr( $authy_data['country_code'] ); ?>" />
+												<input type="tel" class="regular-text" id="authy-cellphone" name="authy_phone" value="<?php echo esc_attr( $authy_data['phone'] ); ?>" />
 											</td>
 										</tr>
 									</table>
