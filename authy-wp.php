@@ -105,14 +105,14 @@ class Authy_WP {
 	/**
 	 * Plugin setup
 	 *
-	 * @uses plugin_dir_path, this::register_settings_fields, this::prepare_api, add_action, add_filter
+	 * @uses plugin_dir_path, add_action, add_filter
 	 * @return null
 	 */
 	private function setup() {
 		require( plugin_dir_path( __FILE__ ) . 'authy-wp-api.php' );
 
-		$this->register_settings_fields();
-		$this->prepare_api();
+		// Early plugin setup - nothing can occur before this.
+		add_action( 'init', array( $this, 'action_init' ) );
 
 		// Plugin settings
 		add_action( 'admin_init', array( $this, 'action_admin_init' ) );
@@ -125,7 +125,7 @@ class Authy_WP {
 		// Important to consider plugin state so we only load code when needed.
 		if ( $this->ready ) {
 			// Check SMS availability
-			add_action( 'init', array( $this, 'check_sms_availability' ) );
+			add_action( 'init', array( $this, 'check_sms_availability' ), 20 );
 
 			// User settings
 			add_action( 'show_user_profile', array( $this, 'action_show_user_profile' ) );
@@ -143,6 +143,18 @@ class Authy_WP {
 		} else {
 			add_action( 'admin_notices', array( $this, 'action_admin_notices' ) );
 		}
+	}
+
+	/**
+	 * Execute early plugin setup
+	 *
+	 * @uses this::register_settings_fields, this::prepare_api
+	 * @action init
+	 * @return null
+	 */
+	public function action_init() {
+		$this->register_settings_fields();
+		$this->prepare_api();
 	}
 
 	/**
@@ -188,16 +200,18 @@ class Authy_WP {
 
 		// Capture API keys set via wp-config
 		if ( ( defined( 'AUTHY_API_KEY_PRODUCTION' ) && AUTHY_API_KEY_PRODUCTION ) || ( defined( 'AUTHY_API_KEY_DEVELOPMENT' ) && AUTHY_API_KEY_DEVELOPMENT ) ) {
-			if ( ! is_array( $this->settings ) )
-				$this->settings = array();
+			// Prime settings
+			$this->get_setting( null );
 
+			// Process overrides from wp-config
 			if ( defined( 'AUTHY_API_KEY_PRODUCTION' ) && AUTHY_API_KEY_PRODUCTION )
 				$this->settings['api_key_production'] = $this->sanitize_alphanumeric( AUTHY_API_KEY_PRODUCTION );
 
 			if ( defined( 'AUTHY_API_KEY_DEVELOPMENT' ) && AUTHY_API_KEY_DEVELOPMENT )
 				$this->settings['api_key_development'] = $this->sanitize_alphanumeric( AUTHY_API_KEY_DEVELOPMENT );
 
-			$this->settings['environment'] = defined( 'AUTHY_ENVIRONMENT' ) && isset( $endpoints[ AUTHY_ENVIRONMENT ] ) ? AUTHY_ENVIRONMENT : 'production';
+			if ( defined( 'AUTHY_ENVIRONMENT' ) && isset( $endpoints[ AUTHY_ENVIRONMENT ] ) )
+				$this->settings['environment'] = AUTHY_ENVIRONMENT;
 		}
 
 		// Plugin page accepts keys for production and development.
@@ -322,7 +336,8 @@ class Authy_WP {
 			$this->settings = wp_parse_args( $this->settings, array(
 				'api_key_production'  => '',
 				'api_key_development' => '',
-				'environment'         => apply_filters( 'authy_wp_environment', 'production' )
+				'environment'         => apply_filters( 'authy_wp_environment', 'production' ),
+				'roles'               => array()
 			) );
 		}
 
