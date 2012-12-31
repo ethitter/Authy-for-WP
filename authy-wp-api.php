@@ -22,6 +22,7 @@ class Authy_WP_API {
 	/**
 	 * Singleton implementation
 	 *
+	 * @since 0.1
 	 * @uses this::setup
 	 * @return object
 	 */
@@ -43,17 +44,22 @@ class Authy_WP_API {
 
 	/**
 	 * Silence is golden.
+	 *
+	 * @since 0.1
 	 */
 	private function __construct() {}
 
 	/**
 	 * Really, silence is golden.
+	 *
+	 * @since 0.1
 	 */
 	private function setup() {}
 
 	/**
 	 * Attempt to retrieve an Authy ID for a given request
 	 *
+	 * @since 0.1
 	 * @param string $email
 	 * @param string $phone
 	 * @param string $country_code
@@ -99,6 +105,7 @@ class Authy_WP_API {
 	/**
 	 * Validate a given token and Authy ID
 	 *
+	 * @since 0.1
 	 * @param int $id
 	 * @param string $token
 	 * @uses add_query_arg, wp_remote_head, wp_remote_retrieve_response_code
@@ -131,6 +138,7 @@ class Authy_WP_API {
 	 * Attempt to send a token via SMS if the API key supports it.
 	 * By setting $force to true, an SMS is sent even if the user has configured the Authy App.
 	 *
+	 * @since 0.2
 	 * @param int $authy_id
 	 * @param bool $force
 	 * @uses add_query_arg, wp_remote_get, wp_remote_retrieve_response_code

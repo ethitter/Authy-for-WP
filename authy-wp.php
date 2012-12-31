@@ -85,6 +85,7 @@ class Authy_WP {
 	/**
 	 * Singleton implementation
 	 *
+	 * @since 0.1
 	 * @uses this::setup
 	 * @return object
 	 */
@@ -99,12 +100,15 @@ class Authy_WP {
 
 	/**
 	 * Silence is golden.
+	 *
+	 * @since 0.1
 	 */
 	private function __construct() {}
 
 	/**
 	 * Load plugin API file and plugin setup
 	 *
+	 * @since 0.1
 	 * @uses plugin_dir_path, add_action
 	 * @return null
 	 */
@@ -118,6 +122,7 @@ class Authy_WP {
 	/**
 	 * Plugin setup
 	 *
+	 * @since 0.3
 	 * @uses this::register_settings_fields, this::prepare_api, add_action, add_filter, wp_register_script, wp_register_style
 	 * @action init
 	 * @return null
@@ -165,6 +170,7 @@ class Authy_WP {
 	/**
 	 * Add settings fields for main plugin page
 	 *
+	 * @since 0.1
 	 * @uses __
 	 * @return null
 	 */
@@ -195,6 +201,7 @@ class Authy_WP {
 	 * Set class variables regarding API
 	 * Instantiates the Authy API class into $this->api
 	 *
+	 * @since 0.1
 	 * @uses this::get_setting, Authy_WP_API::instance
 	 */
 	protected function prepare_api() {
@@ -245,6 +252,7 @@ class Authy_WP {
 	/**
 	 * Register plugin's setting and validation callback
 	 *
+	 * @since 0.1
 	 * @param action admin_init
 	 * @uses register_setting
 	 * @return null
@@ -256,6 +264,7 @@ class Authy_WP {
 	/**
 	 * Register plugin settings page and page's sections
 	 *
+	 * @since 0.1
 	 * @uses add_options_page, add_settings_section
 	 * @action admin_menu
 	 * @return null
@@ -268,6 +277,7 @@ class Authy_WP {
 	/**
 	 * Enqueue admin script for connection modal
 	 *
+	 * @since 0.1
 	 * @uses get_current_screen, wp_enqueue_script, plugins_url, wp_localize_script, this::get_ajax_url, wp_enqueue_style
 	 * @action admin_enqueue_scripts
 	 * @return null
@@ -293,6 +303,7 @@ class Authy_WP {
 	/**
 	 * Add settings link to plugin row actions
 	 *
+	 * @since 0.1
 	 * @param array $links
 	 * @param string $plugin_file
 	 * @uses menu_page_url, __
@@ -309,6 +320,7 @@ class Authy_WP {
 	/**
 	 * Display an admin nag when plugin is active but API keys are missing
 	 *
+	 * @since 0.1
 	 * @uses esc_html, _e, __, menu_page_url
 	 * @action admin_notices
 	 * @return string or null
@@ -329,6 +341,7 @@ class Authy_WP {
 	/**
 	 * Retrieve a plugin setting
 	 *
+	 * @since 0.1
 	 * @param string $key
 	 * @uses get_option, wp_parse_args, apply_filters
 	 * @return array or false
@@ -358,6 +371,7 @@ class Authy_WP {
 	/**
 	 * Build Ajax URLs
 	 *
+	 * @since 0.1
 	 * @uses add_query_arg, wp_create_nonce, admin_url
 	 * @return string
 	 */
@@ -385,6 +399,7 @@ class Authy_WP {
 	/**
 	 * Print common Ajax head element
 	 *
+	 * @since 0.1
 	 * @uses wp_print_scripts, wp_print_styles
 	 * @return string
 	 */
@@ -439,6 +454,7 @@ class Authy_WP {
 	 * Check basic SMS availability.
 	 * Subscription level dictates availability.
 	 *
+	 * @since 0.2
 	 * @uses this::api::send_sms
 	 * @return null
 	 */
@@ -451,6 +467,7 @@ class Authy_WP {
 	/**
 	 * Ensure a given value only contains alphanumeric characters
 	 *
+	 * @since 0.3
 	 * @param string $value
 	 * @return string
 	 */
@@ -465,6 +482,7 @@ class Authy_WP {
 	/**
 	 * Populate settings page's sections
 	 *
+	 * @since 0.1
 	 * @uses wp_parse_args, add_settings_field
 	 * @return null
 	 */
@@ -479,6 +497,7 @@ class Authy_WP {
 	/**
 	 * Render text input
 	 *
+	 * @since 0.1
 	 * @param array $args
 	 * @uses wp_parse_args, esc_attr, disabled, this::get_setting, esc_attr
 	 * @return string or null
@@ -507,6 +526,7 @@ class Authy_WP {
 	/**
 	 * Render Roles input fields
 	 *
+	 * @since 0.3
 	 * @param array $args
 	 * @uses wp_parse_args, esc_attr, this::get_setting, get_editable_roles, __, checked, translate_user_role
 	 * @return string or null
@@ -534,6 +554,7 @@ class Authy_WP {
 	/**
 	 * Render settings page
 	 *
+	 * @since 0.1
 	 * @uses screen_icon, esc_html, get_admin_page_title, settings_fields, do_settings_sections, submit_button
 	 * @return string
 	 */
@@ -567,6 +588,7 @@ class Authy_WP {
 	/**
 	 * Validate plugin settings
 	 *
+	 * @since 0.1
 	 * @param array $settings
 	 * @uses check_admin_referer, wp_parse_args, sanitize_text_field, get_editable_roles
 	 * @return array
@@ -631,6 +653,7 @@ class Authy_WP {
 	/**
 	 * Add Authy data to a given user account
 	 *
+	 * @since 0.1
 	 * @param int $user_id
 	 * @param string $email
 	 * @param string $phone
@@ -679,6 +702,7 @@ class Authy_WP {
 	/**
 	 * Retrieve a user's Authy data for a given API key
 	 *
+	 * @since 0.1
 	 * @param int $user_id
 	 * @param string $api_key
 	 * @uses get_user_meta, wp_parse_args
@@ -711,6 +735,7 @@ class Authy_WP {
 	 * Delete any stored Authy connections for the given user.
 	 * Expected usage is somewhere where clearing is the known action.
 	 *
+	 * @since 0.1
 	 * @param int $user_id
 	 * @uses delete_user_meta
 	 * @return null
@@ -727,6 +752,7 @@ class Authy_WP {
 	 *
 	 * For backwards compatibility, we assume that all users can use Authy if plugin settings haven't been saved since updating from v0.2.
 	 *
+	 * @since 0.3
 	 * @param int $user_id
 	 * @uses is_super_admin, this::get_setting, user_can
 	 * @return bool
@@ -769,6 +795,7 @@ class Authy_WP {
 	/**
 	 * Check if a given user has an Authy ID set
 	 *
+	 * @since 0.1
 	 * @param int $user_id
 	 * @uses this::users_role_allowed, this::get_user_authy_id
 	 * @return bool
@@ -783,6 +810,7 @@ class Authy_WP {
 	/**
 	 * Retrieve a given user's Authy ID
 	 *
+	 * @since 0.1
 	 * @param int $user_id
 	 * @uses this::get_authy_data
 	 * @return int|bool
@@ -804,6 +832,7 @@ class Authy_WP {
 	/**
 	 * Non-JS connection interface
 	 *
+	 * @since 0.1
 	 * @param object $user
 	 * @uses this::users_role_allowed, this::get_authy_data, esc_attr
 	 */
@@ -852,6 +881,7 @@ class Authy_WP {
 	/**
 	 * Handle non-JS changes to users' own connection
 	 *
+	 * @since 0.1
 	 * @param int $user_id
 	 * @uses check_admin_referer, wp_verify_nonce, get_userdata, is_wp_error, this::set_authy_data, this::clear_authy_data,
 	 * @return null
@@ -889,6 +919,7 @@ class Authy_WP {
 	/**
 	 * Allow sufficiently-priviledged users to disable another user's Authy service.
 	 *
+	 * @since 0.1
 	 * @param object $user
 	 * @uses current_user_can, this::users_role_allowed, this::user_has_authy_id, get_user_meta, wp_parse_args, esc_attr, wp_nonce_field
 	 * @action edit_user_profile
@@ -929,6 +960,7 @@ class Authy_WP {
 	/**
 	 * Ajax handler for users' connection manager
 	 *
+	 * @since 0.1
 	 * @uses wp_verify_nonce, get_current_user_id, get_userdata, this::get_authy_data, this::ajax_head, body_class, esc_url, this::get_ajax_url, this::user_has_authy_id, _e, __, submit_button, wp_nonce_field, esc_attr, this::clear_authy_data, wp_safe_redirect, sanitize_email, this::set_authy_data
 	 * @action wp_ajax_{$this->users_page}
 	 * @return string
@@ -1052,6 +1084,7 @@ class Authy_WP {
 	/**
 	 * Clear a user's Authy configuration if an allowed user requests it.
 	 *
+	 * @since 0.1
 	 * @param int $user_id
 	 * @uses wp_verify_nonce, this::clear_authy_data
 	 * @action edit_user_profile_update
@@ -1071,6 +1104,7 @@ class Authy_WP {
 	/**
 	 * Enqueue scripts to support SMS integration, if available
 	 *
+	 * @since 0.2
 	 * @uses wp_enqueue_script, plugins_url, wp_enqueue_style
 	 * @action login_enqueue_scripts
 	 * @return null
@@ -1087,6 +1121,7 @@ class Authy_WP {
 	/**
 	 * Render Ajax modal for SMS tokens at login
 	 *
+	 * @since 0.2
 	 * @uses this::ajax_head, body_class, _e, esc_url, this::get_ajax_url, sanitize_user, esc_attr, wp_nonce_field, submit_button, __, wp_verify_nonce, get_user_by, is_wp_error, this::user_has_authy_id, this::api::send_sms, this::get_user_authy_id
 	 * @action wp_ajax_nopriv_{$this->sms_action}
 	 * @return string
@@ -1196,6 +1231,7 @@ class Authy_WP {
 	/**
 	 * Add Authy input field to login page
 	 *
+	 * @since 0.1
 	 * @uses _e
 	 * @action login_form
 	 * @return string
@@ -1216,6 +1252,7 @@ class Authy_WP {
 	/**
 	 * Attempt Authy verification if conditions are met.
 	 *
+	 * @since 0.1
 	 * @param mixed $user
 	 * @param string $username
 	 * @uses XMLRPC_REQUEST, APP_REQUEST, this::user_has_authy_id, this::get_user_authy_id, this::api::check_token
@@ -1236,7 +1273,7 @@ class Authy_WP {
 
 		// If a user has opted in, he/she must provide a token
 		if ( ! isset( $_POST['authy_token'] ) || empty( $_POST['authy_token'] ) )
-			return new WP_Error( 'authentication_failed', sprintf( __('<strong>ERROR</strong>: To log in as <strong>%s</strong>, you must provide an Authy token.'), $username ) );
+			return new WP_Error( 'authentication_failed', sprintf( __( '<strong>ERROR</strong>: To log in as <strong>%s</strong>, you must provide an Authy token.' ), $username ) );
 
 		// Check the specified token
 		$authy_id = $this->get_user_authy_id( $user->ID );
@@ -1247,7 +1284,7 @@ class Authy_WP {
 		if ( false === $api_check )
 			return null;
 		elseif ( is_string( $api_check ) )
-			return new WP_Error( 'authentication_failed', __('<strong>ERROR</strong>: ' . $api_check ) );
+			return new WP_Error( 'authentication_failed', __( '<strong>ERROR</strong>: ' . $api_check ) );
 
 		return $user;
 	}
