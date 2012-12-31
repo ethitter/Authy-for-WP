@@ -118,7 +118,7 @@ class Authy_WP {
 	/**
 	 * Plugin setup
 	 *
-	 * @uses this::register_settings_fields, this::prepare_api, add_action, add_filter
+	 * @uses this::register_settings_fields, this::prepare_api, add_action, add_filter, wp_register_script, wp_register_style
 	 * @action init
 	 * @return null
 	 */
