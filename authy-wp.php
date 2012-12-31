@@ -819,18 +819,17 @@ class Authy_WP {
 				</tr>
 			<?php else : ?>
 				<tr>
-					<th><label for="phone"><?php _e( 'Mobile number', 'authy_for_wp' ); ?></label></th>
+					<th><label for="authy-country-code"><?php _e( 'Country code', 'authy_for_wp' ); ?></label></th>
 					<td>
-						<input type="tel" class="regular-text" name="<?php echo esc_attr( $this->users_key ); ?>[phone]" value="<?php echo esc_attr( $meta['phone'] ); ?>" />
-
-						<?php wp_nonce_field( $this->users_key . 'edit_own', $this->users_key . '[nonce]' ); ?>
+						<input type="text" class="small-text" id="authy-country-code" name="<?php echo esc_attr( $this->users_key ); ?>[country_code]" value="<?php echo esc_attr( $meta['country_code'] ); ?>" />
 					</td>
 				</tr>
-
 				<tr>
-					<th><label for="phone"><?php _e( 'Country code', 'authy_for_wp' ); ?></label></th>
+					<th><label for="authy-cellphone"><?php _e( 'Mobile number', 'authy_for_wp' ); ?></label></th>
 					<td>
-						<input type="text" class="small-text" name="<?php echo esc_attr( $this->users_key ); ?>[country_code]" value="<?php echo esc_attr( $meta['country_code'] ); ?>" />
+						<input type="tel" class="regular-text" id="authy-cellphone" name="<?php echo esc_attr( $this->users_key ); ?>[phone]" value="<?php echo esc_attr( $meta['phone'] ); ?>" />
+
+						<?php wp_nonce_field( $this->users_key . 'edit_own', $this->users_key . '[nonce]' ); ?>
 					</td>
 				</tr>
 			<?php endif; ?>
