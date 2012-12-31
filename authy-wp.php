@@ -103,9 +103,9 @@ class Authy_WP {
 	private function __construct() {}
 
 	/**
-	 * Plugin setup
+	 * Load plugin API file and plugin setup
 	 *
-	 * @uses plugin_dir_path, add_action, add_filter
+	 * @uses plugin_dir_path, add_action
 	 * @return null
 	 */
 	private function setup() {
@@ -113,6 +113,18 @@ class Authy_WP {
 
 		// Early plugin setup - nothing can occur before this.
 		add_action( 'init', array( $this, 'action_init' ) );
+	}
+
+	/**
+	 * Plugin setup
+	 *
+	 * @uses this::register_settings_fields, this::prepare_api, add_action, add_filter
+	 * @action init
+	 * @return null
+	 */
+	public function action_init() {
+		$this->register_settings_fields();
+		$this->prepare_api();
 
 		// Plugin settings
 		add_action( 'admin_init', array( $this, 'action_admin_init' ) );
@@ -125,7 +137,7 @@ class Authy_WP {
 		// Important to consider plugin state so we only load code when needed.
 		if ( $this->ready ) {
 			// Check SMS availability
-			add_action( 'init', array( $this, 'check_sms_availability' ), 20 );
+			$this->check_sms_availability();
 
 			// User settings
 			add_action( 'show_user_profile', array( $this, 'action_show_user_profile' ) );
@@ -143,18 +155,6 @@ class Authy_WP {
 		} else {
 			add_action( 'admin_notices', array( $this, 'action_admin_notices' ) );
 		}
-	}
-
-	/**
-	 * Execute early plugin setup
-	 *
-	 * @uses this::register_settings_fields, this::prepare_api
-	 * @action init
-	 * @return null
-	 */
-	public function action_init() {
-		$this->register_settings_fields();
-		$this->prepare_api();
 	}
 
 	/**
